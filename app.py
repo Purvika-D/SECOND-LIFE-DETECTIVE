@@ -117,6 +117,20 @@ with right:
 
 # ------------------------------ Analyze image ------------------------------
 if analyze_clicked and uploaded_image is not None:
+    # Clear any previous result first so a failed/new analysis cannot leave stale results visible.
+    for key in (
+        "identification",
+        "recovery_options",
+        "digital_twin",
+        "recovery_passport",
+        "analysis_condition",
+        "analysis_material",
+        "analysis_hazardous",
+        "analysis_image_name",
+        "plan_saved",
+    ):
+        st.session_state.pop(key, None)
+
     try:
         with st.spinner("Looking at the scrap and preparing recovery options…"):
             identification = identify_object(uploaded_image)
@@ -132,6 +146,16 @@ if analyze_clicked and uploaded_image is not None:
             st.error("The identification service returned an unexpected response. Please try again.")
         elif identification.get("error"):
             st.error(str(identification["error"]))
+        elif identification.get("demo_mode"):
+            st.warning(
+                "DEMONSTRATION MODE: Live AI identification is currently unavailable. "
+                "The uploaded item has not been identified, and its material/category "
+                "has not been verified. No recovery pathway has been generated."
+            )
+            st.info(
+                "You can still explore the app interface. Try the analysis again later "
+                "when the AI service is available. Do not treat this result as an actual identification."
+            )
         else:
             condition_map = {
                 "Let the system decide": "unknown",
